@@ -1,0 +1,132 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#define NAME_LENGTH 50
+struct product {
+    int id;
+    char name[NAME_LENGTH];
+    struct product *left, *right;
+    int height;
+};
+int height(struct product *N) {
+    return (N == NULL) ? 0 : N->height;
+}
+struct product *rightRotate(struct product *y) {
+    struct product *x = y->left, *T2 = x->right;
+    x->right = y; y->left = T2;
+    y->height = 1 + (height(y->left) > height(y->right) ? height(y->left) : height(y->right));
+    x->height = 1 + (height(x->left) > height(x->right) ? height(x->left) : height(x->right));
+    return x;
+}
+
+struct product *leftRotate(struct product *x) {
+    struct product *y = x->right, *T2 = y->left;
+    y->left = x; x->right = T2;
+    x->height = 1 + (height(x->left) > height(x->right) ? height(x->left) : height(x->right));
+    y->height = 1 + (height(y->left) > height(y->right) ? height(y->left) : height(y->right));
+    return y;
+}
+int getBalance(struct product *N) {
+    return (N == NULL) ? 0 : height(N->left) - height(N->right);
+}
+struct product *insert(struct product *node, int id, const char *name) {
+    if (!node) {
+        struct product *new_product = malloc(sizeof(struct product));
+        new_product->id = id; 
+        strncpy(new_product->name, name, NAME_LENGTH);
+        new_product->left = new_product->right = NULL; 
+        new_product->height = 1;
+        return new_product;
+    }
+    if (id < node->id) node->left = insert(node->left, id, name);
+    else if (id > node->id) node->right = insert(node->right, id, name);
+    else return node;
+    node->height = 1 + (height(node->left) > height(node->right) ? height(node->left) : height(node->right));
+    int balance = getBalance(node);
+
+    // Balancing the tree
+    if (balance > 1 && id < node->left->id) return rightRotate(node);
+    if (balance < -1 && id > node->right->id) return leftRotate(node);
+    if (balance > 1 && id > node->left->id) {
+        node->left = leftRotate(node->left);
+        return rightRotate(node);
+    }
+    if (balance < -1 && id < node->right->id) {
+        node->right = rightRotate(node->right);
+        return leftRotate(node);
+    }
+    return node;
+}
+
+struct product *minValueNode(struct product *node) {
+    while (node && node->left) node = node->left;
+    return node;
+}
+struct product *deleteNode(struct product *root, int id) {
+    if (!root) return root;
+    if (id < root->id) root->left = deleteNode(root->left, id);
+    else if (id > root->id) root->right = deleteNode(root->right, id);
+    else {
+        struct product *temp = (root->left == NULL) ? root->right : (root->right == NULL) ? root->left : minValueNode(root->right);
+        if (temp) {
+            *root = *temp;
+            free(temp);
+        } else {
+            free(root);
+            return NULL;
+        }
+    }
+    if (!root) return root;
+    root->height = 1 + (height(root->left) > height(root->right) ? height(root->left) : height(root->right));
+    int balance = getBalance(root);
+    if (balance > 1 && getBalance(root->left) >= 0) return rightRotate(root);
+    if (balance < -1 && getBalance(root->right) <= 0) return leftRotate(root);
+    if (balance > 1 && getBalance(root->left) < 0) {
+        root->left = leftRotate(root->left);
+        return rightRotate(root);
+    }
+    if (balance < -1 && getBalance(root->right) > 0) {
+        root->right = rightRotate(root->right);
+        return leftRotate(root);
+    }
+    return root;
+}
+void inOrder(struct product *root) {
+    if (root) {
+        inOrder(root->left);
+        printf("%d (%s) ", root->id, root->name);
+        inOrder(root->right);
+    }
+}
+struct product* search(struct product *root, int id) {
+    if (!root || root->id == id) return root;
+    return (id < root->id) ? search(root->left, id) : search(root->right, id);
+}
+
+int main() {
+    struct product *root = NULL;
+    int n, id;
+    char name[NAME_LENGTH];
+    printf("Enter the number of products to insert: ");
+    scanf("%d", &n);
+    for (int i = 0; i < n; i++) {
+        printf("Enter product ID and name: ");
+        scanf("%d %49s", &id, name); // Read product ID and name
+        root = insert(root, id, name);
+    }
+    printf("In-order traversal of the AVL tree: ");
+    inOrder(root);
+    printf("\n");
+
+    printf("Enter product ID to search: ");
+    scanf("%d", &id);
+    struct product *found = search(root, id);
+    printf(found ? "Found: %d (%s)\n" : "Not found.\n", found ? found->id : -1, found ? found->name : "");
+    printf("Enter product ID to delete: ");
+    scanf("%d", &id);
+    root = deleteNode(root, id);
+    printf("In-order traversal after deletion: ");
+    inOrder(root);
+    printf("\n");
+    return 0;
+}
