@@ -1,5 +1,4 @@
 import os
-
 def get_movie_recommendations(language, genre):
     movies = {
         ("English", "Action"): [("Mission Impossible", 9.0), ("Inception", 8.8), ("Money Heist", 8.1)],
