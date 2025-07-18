@@ -1,0 +1,54 @@
+# Import required libraries
+import networkx as nx
+import matplotlib.pyplot as plt
+
+# Create a weighted graph using NetworkX
+G = nx.Graph()
+
+# Add nodes and edges with weights (example network)
+edges = [
+    ('A', 'B', 4), 
+    ('A', 'C', 2), 
+    ('B', 'C', 5),
+    ('B', 'D', 10), 
+    ('C', 'E', 3), 
+    ('E', 'D', 4)
+]
+G.add_weighted_edges_from(edges)
+
+# Function to visualize the graph and highlight the shortest path
+def draw_graph(graph, shortest_path=None):
+    pos = nx.spring_layout(graph) # Position the nodes
+    labels = nx.get_edge_attributes(graph, 'weight')
+    
+    # Draw the graph
+    nx.draw(graph, pos, with_labels=True, node_color='skyblue', node_size=2000, font_size=16, font_weight='bold')
+    nx.draw_networkx_edge_labels(graph, pos, edge_labels=labels, font_size=14)
+
+    # If a shortest path is provided, highlight it in red
+    if shortest_path:
+        path_edges = list(zip(shortest_path, shortest_path[1:]))
+        nx.draw_networkx_edges(graph, pos, edgelist=path_edges, edge_color='red', width=3)
+    
+    plt.title("Network Topology and Shortest Path")
+    plt.show()
+
+# Function to perform Dijkstra's Algorithm Simulation
+def dijkstra_simulation(graph, start, target):
+    # Calculate the shortest path and its distance
+    shortest_path = nx.dijkstra_path(graph, start, target)
+    distance = nx.dijkstra_path_length(graph, start, target)
+    
+    # Display the results
+    print(f"Shortest Path from {start} to {target}: {shortest_path}")
+    print(f"Total Distance: {distance}")
+    
+    # Visualize the graph and highlight the shortest path
+    draw_graph(graph, shortest_path)
+
+# User input for source and target nodes
+source_node = input("Enter the Source Node: ")
+target_node = input("Enter the Target Node: ")
+
+# Run the simulation
+dijkstra_simulation(G, source_node, target_node)
